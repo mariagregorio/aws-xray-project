@@ -1,6 +1,8 @@
 service: aws-xray-project
 frameworkVersion: '3'
 
+useDotenv: true
+
 provider:
   name: aws
   runtime: nodejs18.x
@@ -21,6 +23,8 @@ provider:
 functions:
   productsHandler:
     handler: productsHandler.handler
+    environment: 
+      CURRENCY_API_KEY: ${env:CURRENCY_API_KEY}
     events:
       - httpApi:
           path: /
