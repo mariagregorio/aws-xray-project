@@ -4,7 +4,7 @@
   "description": "Simple project to showcase AWS X-Ray",
   "main": "index.js",
   "scripts": {
-    "build": "tsc; cp -r ./node_modules ./dist/node_modules; cp ./.env ./dist/.env; cp ./serverless.yml ./dist/serverless.yml",
+    "build": "tsc; npm i; cp -r ./node_modules ./dist/node_modules; cp ./.env ./dist/.env; cp ./serverless.yml ./dist/serverless.yml",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Maria Gregorio",
