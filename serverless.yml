@@ -1,0 +1,43 @@
+service: aws-xray-project
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  iam:
+    role:
+      statements: 
+        - Effect: Allow
+          Action: 
+            - dynamodb:DescribeTable
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource: 'arn:aws:dynamodb:us-east-1:*:*'
+
+functions:
+  productsHandler:
+    handler: productsHandler.handler
+    events:
+      - httpApi:
+          path: /
+          method: post
+
+resources:
+  Resources:
+    productsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: Products
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
