@@ -1,15 +1,16 @@
-import { Handler, APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
+import { Handler, APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { DynamoDBClient, PutItemCommand } from '@aws-sdk/client-dynamodb';
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
+import AWSXRay from 'aws-xray-sdk-core';
 
-export const client = new DynamoDBClient({ region: 'us-east-1' });
+export const client = AWSXRay.captureAWSv3Client(new DynamoDBClient({ region: 'us-east-1' }));
 
-type ProxyHandler = Handler<APIGatewayProxyEventV2, APIGatewayProxyResultV2>;
+type ProxyHandler = Handler<APIGatewayProxyEvent, APIGatewayProxyResult>;
 
-export const handler: ProxyHandler = async (event, context) => {
-    const { requestContext, body } = event;
-    switch (requestContext.http.method) {
+export const handler: ProxyHandler = async (event, _context) => {
+    const { httpMethod, body } = event;
+    switch (httpMethod) {
         case 'POST':
             if (body) {
                 const parsedBody = JSON.parse(body);
@@ -21,7 +22,11 @@ export const handler: ProxyHandler = async (event, context) => {
                 };
                 if (parsedBody.price.currency !== 'USD') {
                     try {
+                        const segment = AWSXRay.getSegment();
+                        const subsegment = segment?.addNewSubsegment('CurrencyAPIcall');
+                        subsegment?.addAnnotation('currency', parsedBody.price.currency);
                         const convertedPrice = await convertCurrency(parsedBody.price.currency, parsedBody.price.value);
+                        subsegment?.close();
                         if (!convertedPrice) throw new Error('Currency convertion result is undefined');
                         product.price = convertedPrice;
                     } catch (e) {
@@ -44,7 +49,7 @@ export const handler: ProxyHandler = async (event, context) => {
     return { statusCode: 404, body: 'Resource not found' };
 };
 
-const validateBody = (body: any): APIGatewayProxyResultV2 | void => {
+const validateBody = (body: any): APIGatewayProxyResult | void => {
     if (!body.name || body.name === '')
         return { statusCode: 400, body: 'Bad request, no name provided' };
     if (!body.price) return { statusCode: 400, body: 'Bad request, no price provided' };
