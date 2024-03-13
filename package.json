@@ -4,7 +4,7 @@
   "description": "Simple project to showcase AWS X-Ray",
   "main": "index.js",
   "scripts": {
-    "build": "tsc; npm i; cp -r ./node_modules ./dist/node_modules; cp ./.env ./dist/.env; cp ./serverless.yml ./dist/serverless.yml",
+    "build": "tsc; npm i; rm -rf ./dist/node_modules; cp -r ./node_modules ./dist/node_modules; cp ./.env ./dist/.env; cp ./serverless.yml ./dist/serverless.yml",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Maria Gregorio",
@@ -18,6 +18,7 @@
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.529.1",
     "@aws-sdk/lib-dynamodb": "^3.529.1",
+    "aws-xray-sdk-core": "^3.5.4",
     "axios": "^1.6.7",
     "uuid": "^9.0.1"
   }
