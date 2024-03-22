@@ -21,17 +21,19 @@ export const handler: ProxyHandler = async (event, _context) => {
                     price: parsedBody.price.value,
                 };
                 if (parsedBody.price.currency !== 'USD') {
+                    const segment = AWSXRay.getSegment();
+                    const subsegment = segment?.addNewSubsegment('CurrencyAPIcall');
+                    subsegment?.addAnnotation('currency', parsedBody.price.currency);
                     try {
-                        const segment = AWSXRay.getSegment();
-                        const subsegment = segment?.addNewSubsegment('CurrencyAPIcall');
-                        subsegment?.addAnnotation('currency', parsedBody.price.currency);
                         const convertedPrice = await convertCurrency(parsedBody.price.currency, parsedBody.price.value);
-                        subsegment?.close();
                         if (!convertedPrice) throw new Error('Currency convertion result is undefined');
                         product.price = convertedPrice;
                     } catch (e) {
                         console.error('error while fetching currencies', e);
+                        subsegment?.addError(`Error on currency convertion API call ${JSON.stringify(e)}`);
                         return { statusCode: 500, body: 'Internal error' };
+                    } finally {
+                        subsegment?.close();
                     }
                 }
                 try {
